@@ -1,16 +1,28 @@
+
+```markdown
 # AllWeb3Jobs.io
 
 A **Next.js 14** job board for Web3 careers with **two Telegram bots** that let you post jobs instantly by pasting text — no form-filling.
 
 ##  Features
 
-- **Two categories**: Internships / Juniors / Hackathons, and Mid-level / Senior / Lead
-- **Fuzzy search** (Fuse.js) – works even with typos
-- **Instant posting**: send a message to a Telegram bot → job appears on the site in seconds
--  Mobile‑first responsive design
--  SEO: dynamic sitemap, JSON‑LD structured data, clean slugs
--  Static generation with ISR (revalidates every hour, or on‑demand)
--  Two separate bots for the two categories
+-  **Two categories**  
+  Internships / Juniors / Hackathons, and Mid-level / Senior / Lead
+
+-  **Fuzzy search** (Fuse.js) – works even with typos
+
+-  **Instant posting**  
+  Send a message to a Telegram bot → job appears on the site in seconds
+
+-  **Mobile‑first responsive design**
+
+-  **SEO**  
+  Dynamic sitemap, JSON‑LD structured data, clean slugs
+
+-  **Static generation with ISR**  
+  Revalidates every hour, or on‑demand
+
+-  **Two separate bots** for the two categories
 
 ##  Tech Stack
 
@@ -27,60 +39,67 @@ A **Next.js 14** job board for Web3 careers with **two Telegram bots** that let 
    ```bash
    git clone https://github.com/Trinityweb3/AllWeb3Jobs.io.git
    cd AllWeb3Jobs.io
-Install dependencies
+   ```
 
-bash
-npm install
-Set up environment variables
-Copy .env.local.example (if present) or create .env.local:
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-bash
-cp .env.local.example .env.local   # or create manually
-Fill in the values (see Environment variables below).
+3. **Set up environment variables**  
+   Copy `.env.local.example` (if present) or create `.env.local` manually:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+   Fill in the values (see [Environment variables](#environment-variables) below).
 
-Run the dev server
+4. **Run the dev server**
+   ```bash
+   npm run dev
+   ```
+   The site will be available at `http://localhost:3000`.
 
-bash
-npm run dev
-The site will be available at http://localhost:3000.
+##  Environment Variables
 
-Environment Variables
-Create a .env.local file with:
+Create a `.env.local` file with the following keys:
 
-env
-NEXT_PUBLIC_SITE_URL=http://localhost:3000   # your actual domain in prod
+```env
+NEXT_PUBLIC_SITE_URL=http://localhost:3000   # your actual domain in production
 REVALIDATION_SECRET=choose-a-random-string
 BOT_API_SECRET=choose-another-random-string
 BOT1_TOKEN=123456:ABC...                     # from @BotFather
 BOT2_TOKEN=789012:XYZ...                     # from @BotFather
-REVALIDATION_SECRET – used for the /api/revalidate endpoint
+```
 
-BOT_API_SECRET – used by the bots to authenticate with the internal API
+- `REVALIDATION_SECRET` – used for the `/api/revalidate` endpoint  
+- `BOT_API_SECRET` – used by the bots to authenticate with the internal API  
+- `BOT1_TOKEN` / `BOT2_TOKEN` – Telegram bot tokens; **never commit them to Git**
 
-BOT1_TOKEN / BOT2_TOKEN – Telegram bot tokens; never commit them to Git
+##  How to Add Jobs
 
-🤖 How to Add Jobs
-Option 1 – Telegram bots (recommended)
-Start the bot process:
+### Option 1 – Telegram bots (recommended)
 
-bash
-node bots.js
-(set USE_PROXY in bots.js if you're in a country that blocks Telegram)
+1. Start the bot process:
+   ```bash
+   node bots.js
+   ```
+   *(set `USE_PROXY` in `bots.js` if you’re in a country that blocks Telegram)*
 
-Send a text message to Bot #1 (Internships) or Bot #2 (Mid/Senior):
+2. Send a **text message** to  
+   - Bot #1 (Internships / Juniors)  
+   - Bot #2 (Mid / Senior)
 
-First line → job title
+   - **First line** → job title  
+   - **Everything else** → full description  
+   - The first 200 characters become the short preview on cards.
 
-Everything else → full description
+3. The job appears instantly on the site (the API triggers on‑demand revalidation).
 
-The first 200 characters become the short preview on cards.
+### Option 2 – Manual JSON file
 
-The job appears instantly on the site (the API triggers on‑demand revalidation).
+Place a `.json` file inside `data/jobs/` with the following structure:
 
-Option 2 – Manual JSON file
-Place a .json file inside data/jobs/ with the following structure:
-
-json
+```json
 {
   "title": "Junior Rust Developer",
   "description_full": "Full description here...",
@@ -89,17 +108,24 @@ json
   "location": "Remote",
   "type": "Full-time"
 }
-Only title and description_full are required; category must be one of internships-juniors or mid-senior-leads.
+```
 
-The site will pick it up at the next ISR revalidation (or call /api/revalidate?secret=... manually).
+- Only `title` and `description_full` are required.  
+- `category` must be one of `internships-juniors` or `mid-senior-leads`.
 
-On‑Demand Revalidation
-To rebuild pages right away (after adding a job manually, for example), call:
+The site will pick it up at the next ISR revalidation (or trigger it manually, see below).
 
-text
+## On‑Demand Revalidation
+
+To rebuild pages immediately (e.g. after adding a job manually), call:
+
+```
 GET /api/revalidate?secret=YOUR_REVALIDATION_SECRET
-Project Structure
-text
+```
+
+## Project Structure
+
+```
 .
 ├── components/          # Layout, JobCard, SearchBar, SimilarJobs
 ├── lib/                 # Core logic: jobs, similarity, slugify, siteConfig
@@ -113,21 +139,31 @@ text
 ├── bots.js              # Telegram bot script (polling)
 ├── deploy.sh            # Example Arch Linux deployment script with systemd
 └── package.json
-Deployment (Production)
-Build and start:
+```
 
-bash
-npm run build
-npm start
-To run the bots alongside, use a process manager like systemd or pm2.
-On Arch Linux, the included deploy.sh can set up systemd services for both Next.js and the bots.
+## Deployment (Production)
 
-Make sure your domain points to the server and the environment variables are set correctly.
+1. Build and start:
+   ```bash
+   npm run build
+   npm start
+   ```
+2. To run the bots alongside, use a process manager like **systemd** or **pm2**.  
+   On Arch Linux, the included `deploy.sh` can set up systemd services for both Next.js and the bots.
+3. Make sure your domain points to the server and the environment variables are set correctly.
 
-Note for countries with Telegram blocks:
-Enable the SOCKS5 proxy inside bots.js (already prepared) and install socks-proxy-agent:
-
-bash
+**Note for countries with Telegram blocks:**  
+Enable the SOCKS5 proxy inside `bots.js` (already prepared) and install the required package:
+```bash
 npm install socks-proxy-agent
+```
 
-Made with ❤️ for the Web3 community by https://github.com/Trinityweb3/
+## ⚖️ License / Usage
+
+This project is shared **for viewing and educational purposes only**.  
+Commercial use, redistribution for profit, or deployment as a paid service without explicit permission is **prohibited**.
+
+Made with ❤️ for the allweb3jobs.io by [Trinityweb3](https://github.com/Trinityweb3).
+```
+
+You can now save this as `README.md` and push it to GitHub. The restriction is clearly stated at the bottom.
