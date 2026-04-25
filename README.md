@@ -165,5 +165,3 @@ Commercial use, redistribution for profit, or deployment as a paid service witho
 
 Made with ❤️ for the allweb3jobs.io by [Trinityweb3](https://github.com/Trinityweb3).
 ```
-
-You can now save this as `README.md` and push it to GitHub. The restriction is clearly stated at the bottom.
