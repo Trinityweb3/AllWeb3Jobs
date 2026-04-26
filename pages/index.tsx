@@ -4,6 +4,7 @@ import Fuse from 'fuse.js';
 import Layout from '@/components/Layout';
 import JobCard from '@/components/JobCard';
 import SearchBar from '@/components/SearchBar';
+import CryptoDashboard from '@/components/CryptoDashboard'; // ← если файл называется иначе (MarketDashboard), исправьте здесь
 import { getAllJobs, Job } from '@/lib/jobs';
 import { siteConfig } from '@/lib/siteConfig';
 
@@ -41,8 +42,12 @@ export default function Home({ jobs, latestJobs }: HomeProps) {
 
   return (
     <Layout>
+      {/* 📈 Market Dashboard */}
+      <CryptoDashboard />
+
+      {/* 🔍 Search & Filters */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Web3 & Crypto Jobs</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">All Web3 Jobs</h1>
         <p className="text-gray-600 mb-6">
           Discover remote and on‑site Web3 opportunities. Updated daily.
         </p>
@@ -56,7 +61,7 @@ export default function Home({ jobs, latestJobs }: HomeProps) {
             onClick={() => setActiveCategory(tab.id)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               activeCategory === tab.id
-                ? 'bg-blue-600 text-white'
+                ? 'bg-brand-500 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -71,6 +76,7 @@ export default function Home({ jobs, latestJobs }: HomeProps) {
         </div>
       )}
 
+      {/* ⭐ Latest Jobs (only when no search and category is "all") */}
       {!searchQuery && activeCategory === 'all' && (
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Latest Jobs</h2>
@@ -82,6 +88,7 @@ export default function Home({ jobs, latestJobs }: HomeProps) {
         </section>
       )}
 
+      {/* 📋 Main Job List */}
       <section>
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
           {activeCategory !== 'all'

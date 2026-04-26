@@ -51,20 +51,27 @@ export async function getAllJobs(): Promise<Job[]> {
   const jobs: Job[] = [];
 
   for (const fileName of fileNames) {
-    if (!fileName.endsWith('.json')) continue;
-    try {
-      const fullPath = path.join(jobsDirectory, fileName);
-      const fileContents = await fs.readFile(fullPath, 'utf8');
-      const raw = JSON.parse(fileContents);
-      const job = validateJob(raw);
-      if (job) {
-        const slug = slugify(job.title) || fileName.replace(/\.json$/, '');
-        jobs.push({ ...job, slug });
-      }
-    } catch (err) {
-      console.error(`Error processing ${fileName}:`, err);
+  if (!fileName.endsWith('.json')) continue;
+  try {
+    const fullPath = path.join(jobsDirectory, fileName);
+    const fileContents = await fs.readFile(fullPath, 'utf8');
+    const raw = JSON.parse(fileContents);
+    const job = validateJob(raw);
+    if (job) {
+      const slug = slugify(job.title) || fileName.replace(/\.json$/, '');
+      const cleanJob = {
+        ...job,
+        slug,
+        company: job.company ?? null,
+        location: job.location ?? null,
+        type: job.type ?? null,
+      };
+      jobs.push(cleanJob);
     }
+  } catch (err) {
+    console.error(`Error processing ${fileName}:`, err);
   }
+}
 
   return jobs.sort((a, b) => (a.date < b.date ? 1 : -1));
 }

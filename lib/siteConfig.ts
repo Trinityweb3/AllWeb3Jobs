@@ -1,9 +1,9 @@
 export const siteConfig = {
-  name: 'Web3 Job Board',
+  name: 'AllWeb3Jobs',
   defaultTitle: 'Web3 Job Board – Web3, Blockchain & Crypto Jobs',
   defaultDescription:
-    'Latest Web3, DeFi, NFT, and crypto jobs. Find remote and office positions for developers, marketers, designers, managers.',
-  githubUrl: 'https://github.com/your-repo',
+    'Daily Web3 jobs you can actually get. Handpicked with care. Find remote and office positions for developers, marketers, designers, managers.',
+  githubUrl: 'https://github.com/Trinityweb3/AllWeb3Jobs',
   revalidateSeconds: 3600,
   categories: [
     {
