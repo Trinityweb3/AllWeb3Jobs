@@ -2,42 +2,32 @@ use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use teloxide::{prelude::*, types::Message, utils::command::BotCommands, RequestError};
+use teloxide::{
+    prelude::*,
+    types::{KeyboardButton, KeyboardMarkup, Message, ReplyMarkup},
+    RequestError,
+};
 use reqwest::Client;
 use uuid::Uuid;
 
-// Команды бота
-#[derive(BotCommands, Clone)]
-#[command(rename_rule = "lowercase")]
-enum Command {
-    Start,
-    Help,
-    #[command(rename = "/intern")]
-    Intern,
-    #[command(rename = "/mid")]
-    Mid,
-    #[command(rename = "/news")]
-    News,
-    #[command(rename = "/activity")]
-    Activity,
-    #[command(rename = "/token")]
-    Token(String),
-    Cancel,
-}
+const SECTION_INTERN: &str = "🧑‍💻 Intern/Junior Job";
+const SECTION_MID: &str = "💼 Mid/Senior Job";
+const SECTION_NEWS: &str = "📰 News";
+const SECTION_ACTIVITY: &str = "🎯 Activity";
+const SECTION_TOKEN: &str = "📊 Token Analysis";
+const CANCEL: &str = "❌ Cancel";
 
-// Действие, которое бот ожидает от пользователя
 #[derive(Clone)]
 enum PendingAction {
     Content {
         category: String,
         token_symbol: Option<String>,
     },
+    AwaitTokenSymbol,
 }
 
-// Глобальное состояние ожидающих чатов
 type WaitingMap = Arc<Mutex<HashMap<ChatId, PendingAction>>>;
 
-// Белый список пользователей
 fn get_allowed_users() -> Vec<String> {
     env::var("ALLOWED_USERS")
         .unwrap_or_default()
@@ -50,16 +40,41 @@ fn get_allowed_users() -> Vec<String> {
 fn is_user_allowed(chat_id: &ChatId) -> bool {
     let allowed = get_allowed_users();
     if allowed.is_empty() {
-        return true; 
+        return true;
     }
     let user_id = chat_id.to_string();
     allowed.iter().any(|id| id == &user_id)
 }
 
+fn main_keyboard() -> ReplyMarkup {
+    let keyboard = vec![
+        vec![
+            KeyboardButton::new(SECTION_INTERN),
+            KeyboardButton::new(SECTION_MID),
+        ],
+        vec![
+            KeyboardButton::new(SECTION_NEWS),
+            KeyboardButton::new(SECTION_ACTIVITY),
+        ],
+        vec![KeyboardButton::new(SECTION_TOKEN)],
+        vec![KeyboardButton::new(CANCEL)],
+    ];
+    ReplyMarkup::Keyboard(KeyboardMarkup::new(keyboard).resize_keyboard())
+}
+
 pub async fn start_bot() {
-    let token: String = env::var("BOT_TOKEN").unwrap();
-    let bot: Bot = Bot::new(token);
-    let http_client = Client::new();
+    let token = env::var("BOT_TOKEN").expect("BOT_TOKEN missing");
+    let bot = Bot::new(token);
+
+    let telegram_http_client = Arc::new(Client::new());
+
+    let local_http_client = Arc::new(
+        Client::builder()
+            .no_proxy()
+            .build()
+            .expect("Failed to build local HTTP client"),
+    );
+
     let api_url =
         env::var("API_URL").unwrap_or_else(|_| "http://localhost:3001/api/add-content".to_string());
     let public_dir = PathBuf::from(
@@ -69,7 +84,9 @@ pub async fn start_bot() {
     let waiting: WaitingMap = Arc::new(Mutex::new(HashMap::new()));
 
     let handler = {
-        let http_client = http_client.clone();
+        let bot = bot.clone();
+        let local_http_client = local_http_client.clone();
+        let telegram_http_client = telegram_http_client.clone();
         let api_url = api_url.clone();
         let public_dir = public_dir.clone();
         let waiting = waiting.clone();
@@ -79,35 +96,36 @@ pub async fn start_bot() {
             .branch(dptree::endpoint(
                 move |msg: Message, bot: Bot| {
                     let bot = bot.clone();
-                    let http_client = http_client.clone();
+                    let local_http_client = local_http_client.clone();
+                    let telegram_http_client = telegram_http_client.clone();
                     let api_url = api_url.clone();
                     let public_dir = public_dir.clone();
                     let waiting = waiting.clone();
 
                     async move {
                         let chat_id = msg.chat.id;
+                        let text = msg.text().or(msg.caption()).unwrap_or("").to_string();
 
-                        // Проверяем, есть ли ожидающее действие
+                        if text == CANCEL {
+                            waiting.lock().unwrap().remove(&chat_id);
+                            bot.send_message(chat_id, "Action cancelled. Choose a section:")
+                                .reply_markup(main_keyboard())
+                                .await?;
+                            return Ok::<_, RequestError>(());
+                        }
+
                         let pending = {
                             let lock = waiting.lock().unwrap();
                             lock.get(&chat_id).cloned()
                         };
 
                         if let Some(pending) = pending {
-                            // Обрабатываем ожидаемое действие
                             match pending {
                                 PendingAction::Content {
                                     category,
                                     token_symbol,
                                 } => {
-                                    let text = msg
-                                        .text()
-                                        .or(msg.caption())
-                                        .unwrap_or_default()
-                                        .to_string();
-                                    let has_photo = msg.photo().is_some();
-
-                                    if text.is_empty() && !has_photo {
+                                    if text.is_empty() && msg.photo().is_none() {
                                         bot.send_message(
                                             chat_id,
                                             "Please send text (or photo with caption)",
@@ -133,7 +151,12 @@ pub async fn start_bot() {
                                                         bot.token(),
                                                         file.path
                                                     );
-                                                    match http_client.get(&file_url).send().await {
+                                                    match telegram_http_client
+                                                        .clone()
+                                                        .get(&file_url)
+                                                        .send()
+                                                        .await
+                                                    {
                                                         Ok(resp) => match resp.bytes().await {
                                                             Ok(bytes) => {
                                                                 if let Err(e) = tokio::fs::write(
@@ -150,7 +173,6 @@ pub async fn start_bot() {
                                                                         ),
                                                                     )
                                                                     .await?;
-                                                                    // не сбрасываем ожидание, даём повторить
                                                                     return Ok::<_, RequestError>(
                                                                         (),
                                                                     );
@@ -208,7 +230,8 @@ pub async fn start_bot() {
                                             "image_url": image_url,
                                         });
 
-                                        match http_client
+                                        match local_http_client
+                                            .clone()
                                             .post(&api_url)
                                             .header(
                                                 "x-bot-token",
@@ -249,121 +272,113 @@ pub async fn start_bot() {
                                             }
                                         }
 
-                                        // Сбрасываем ожидание после успешной обработки или ошибки API
                                         waiting.lock().unwrap().remove(&chat_id);
+                                        bot.send_message(chat_id, "Choose next action:")
+                                            .reply_markup(main_keyboard())
+                                            .await?;
+                                    }
+                                }
+                                PendingAction::AwaitTokenSymbol => {
+                                    if text.is_empty() {
+                                        bot.send_message(
+                                            chat_id,
+                                            "Please type the token symbol (e.g. BTC):",
+                                        )
+                                        .await?;
+                                    } else {
+                                        let symbol = text.trim().to_uppercase();
+                                        bot.send_message(
+                                            chat_id,
+                                            format!(
+                                                "Now send text + optional photo for token ${}",
+                                                symbol
+                                            ),
+                                        )
+                                        .await?;
+                                        waiting.lock().unwrap().insert(
+                                            chat_id,
+                                            PendingAction::Content {
+                                                category: "token_analysis".into(),
+                                                token_symbol: Some(symbol),
+                                            },
+                                        );
                                     }
                                 }
                             }
                         } else {
-                            // Нет ожидания – обрабатываем как команду
-                            if let Some(text) = msg.text() {
-                                if let Ok(cmd) = Command::parse(text, "allweb3jobs_bot") {
-                                    match cmd {
-                                        Command::Start | Command::Help => {
-                                            bot.send_message(
-                                                chat_id,
-                                                "Choose a section:\n\
-                                                /intern - Internships & Juniors\n\
-                                                /mid - Mid/Senior roles\n\
-                                                /news - News\n\
-                                                /activity - Activities\n\
-                                                /token SYMBOL - Token analysis\n\
-                                                /cancel - Cancel current action",
-                                            )
-                                            .await?;
-                                        }
-                                        Command::Intern => {
-                                            bot.send_message(
-                                                chat_id,
-                                                "Send text + optional photo for an Internship/Junior job",
-                                            )
-                                            .await?;
-                                            waiting.lock().unwrap().insert(
-                                                chat_id,
-                                                PendingAction::Content {
-                                                    category: "intern".into(),
-                                                    token_symbol: None,
-                                                },
-                                            );
-                                        }
-                                        Command::Mid => {
-                                            bot.send_message(
-                                                chat_id,
-                                                "Send text + optional photo for a Mid/Senior job",
-                                            )
-                                            .await?;
-                                            waiting.lock().unwrap().insert(
-                                                chat_id,
-                                                PendingAction::Content {
-                                                    category: "mid".into(),
-                                                    token_symbol: None,
-                                                },
-                                            );
-                                        }
-                                        Command::News => {
-                                            bot.send_message(
-                                                chat_id,
-                                                "Send text + optional photo for a news post",
-                                            )
-                                            .await?;
-                                            waiting.lock().unwrap().insert(
-                                                chat_id,
-                                                PendingAction::Content {
-                                                    category: "news".into(),
-                                                    token_symbol: None,
-                                                },
-                                            );
-                                        }
-                                        Command::Activity => {
-                                            bot.send_message(
-                                                chat_id,
-                                                "Send text + optional photo for an activity",
-                                            )
-                                            .await?;
-                                            waiting.lock().unwrap().insert(
-                                                chat_id,
-                                                PendingAction::Content {
-                                                    category: "activity".into(),
-                                                    token_symbol: None,
-                                                },
-                                            );
-                                        }
-                                        Command::Token(symbol) => {
-                                            let symbol = symbol.to_uppercase();
-                                            bot.send_message(
-                                                chat_id,
-                                                format!(
-                                                    "Send text + optional photo for token ${}",
-                                                    symbol
-                                                ),
-                                            )
-                                            .await?;
-                                            waiting.lock().unwrap().insert(
-                                                chat_id,
-                                                PendingAction::Content {
-                                                    category: "token_analysis".into(),
-                                                    token_symbol: Some(symbol),
-                                                },
-                                            );
-                                        }
-                                        Command::Cancel => {
-                                            waiting.lock().unwrap().remove(&chat_id);
-                                            bot.send_message(chat_id, "Cancelled").await?;
-                                        }
-                                    }
-                                } else {
+                            match text.as_str() {
+                                SECTION_INTERN => {
                                     bot.send_message(
                                         chat_id,
-                                        "Use a command to select section, e.g. /intern",
+                                        "Send text + optional photo for Intern/Junior job",
                                     )
                                     .await?;
+                                    waiting.lock().unwrap().insert(
+                                        chat_id,
+                                        PendingAction::Content {
+                                            category: "intern".into(),
+                                            token_symbol: None,
+                                        },
+                                    );
                                 }
-                            } else {
-                                bot.send_message(
-                                    chat_id,
-                                    "Use a command to select section, e.g. /intern",
-                                )
-                                .await?;
+                                SECTION_MID => {
+                                    bot.send_message(
+                                        chat_id,
+                                        "Send text + optional photo for Mid/Senior job",
+                                    )
+                                    .await?;
+                                    waiting.lock().unwrap().insert(
+                                        chat_id,
+                                        PendingAction::Content {
+                                            category: "mid".into(),
+                                            token_symbol: None,
+                                        },
+                                    );
+                                }
+                                SECTION_NEWS => {
+                                    bot.send_message(
+                                        chat_id,
+                                        "Send text + optional photo for a news post",
+                                    )
+                                    .await?;
+                                    waiting.lock().unwrap().insert(
+                                        chat_id,
+                                        PendingAction::Content {
+                                            category: "news".into(),
+                                            token_symbol: None,
+                                        },
+                                    );
+                                }
+                                SECTION_ACTIVITY => {
+                                    bot.send_message(
+                                        chat_id,
+                                        "Send text + optional photo for an activity",
+                                    )
+                                    .await?;
+                                    waiting.lock().unwrap().insert(
+                                        chat_id,
+                                        PendingAction::Content {
+                                            category: "activity".into(),
+                                            token_symbol: None,
+                                        },
+                                    );
+                                }
+                                SECTION_TOKEN => {
+                                    bot.send_message(
+                                        chat_id,
+                                        "First, type the token symbol (e.g. BTC):",
+                                    )
+                                    .await?;
+                                    waiting.lock().unwrap().insert(
+                                        chat_id,
+                                        PendingAction::AwaitTokenSymbol,
+                                    );
+                                }
+                                _ => {
+                                    bot.send_message(chat_id, "Choose a section:")
+                                        .reply_markup(main_keyboard())
+                                        .await?;
+                                }
                             }
                         }
                         Ok::<_, RequestError>(())

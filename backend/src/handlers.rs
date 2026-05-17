@@ -1,9 +1,8 @@
 use axum::{http::StatusCode, Json};
 use serde::Deserialize;
+use std::env;
 use crate::jobs;
 use axum::response::IntoResponse;
-pub struct AppState;
-
 #[derive(Deserialize)]
 pub struct AddJobRequest {
     pub text: String,
@@ -23,7 +22,7 @@ pub async fn add_job(
     Json(payload): Json<AddJobRequest>,
 ) -> impl axum::response::IntoResponse {
     let token = headers.get("x-bot-token").and_then(|v| v.to_str().ok()).unwrap_or("");
-    let expected = std::env::var("BOT_API_SECRET").unwrap_or_default();
+    let expected = env::var("BOT_API_SECRET").unwrap_or_default();
     if token != expected {
         return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"Invalid token"}))).into_response();
     }
@@ -38,7 +37,10 @@ pub async fn add_job(
 
     match jobs::create_job(title, &description_full, &payload.category) {
         Ok(job) => (StatusCode::CREATED, Json(serde_json::json!({"success":true,"slug":job.slug}))).into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))).into_response(),
+        Err(e) => {
+            eprintln!("[add-job] error: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))).into_response()
+        }
     }
 }
 
@@ -47,7 +49,7 @@ pub async fn add_content(
     Json(payload): Json<AddContentRequest>,
 ) -> impl axum::response::IntoResponse {
     let token = headers.get("x-bot-token").and_then(|v| v.to_str().ok()).unwrap_or("");
-    let expected = std::env::var("BOT_API_SECRET").unwrap_or_default();
+    let expected = env::var("BOT_API_SECRET").unwrap_or_default();
     if token != expected {
         return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"Invalid token"}))).into_response();
     }
@@ -62,11 +64,11 @@ pub async fn add_content(
 
     let category = payload.category.clone();
     let (dir, post_type) = match category.as_str() {
-        "intern" | "mid" => (crate::jobs::JOBS_DIR, "job"),
-        _ => (crate::jobs::CONTENT_DIR, &category as &str),
+        "intern" | "mid" => (jobs::JOBS_DIR, "job"),
+        _ => (jobs::CONTENT_DIR, &category as &str),
     };
 
-    match crate::jobs::create_post(
+    match jobs::create_post(
         post_type,
         title,
         &description,
@@ -76,6 +78,9 @@ pub async fn add_content(
         dir,
     ) {
         Ok(slug) => (StatusCode::CREATED, Json(serde_json::json!({"success":true,"slug":slug}))).into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))).into_response(),
+        Err(e) => {
+            eprintln!("[add-content] error: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":e.to_string()}))).into_response()
+        }
     }
 }
