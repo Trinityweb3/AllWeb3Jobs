@@ -12,7 +12,7 @@ const ResumePreview = forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
 const themes = {
   modern: {
     header:
-        'bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#111827] text-white shadow-[0_10px_40px_rgba(0,0,0,0.45)] border border-cyan-500/10',
+        'bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#111827] text-[#ffffff] shadow-[0_10px_40px_rgba(0,0,0,0.45)] border border-cyan-500/10',
     accent:
         'text-cyan-300',
     section:
@@ -20,22 +20,22 @@ const themes = {
 },
 
   classic: {
-    header: 'bg-gradient-to-r from-blue-950 via-indigo-900 to-blue-900 text-white shadow-md',
+    header: 'bg-gradient-to-r from-blue-950 via-indigo-900 to-blue-900 text-[#ffffff] shadow-md',
     accent: 'text-amber-600',
     section: 'border-blue-300',
   },
 
   minimal: {
-    header: 'bg-white border-b-2 border-gray-300 text-gray-900',
-    accent: 'text-gray-500',
-    section: 'border-gray-100',
+    header: 'bg-[#ffffff] border-b-2 border-[#D1D5DB] text-[#111827]',
+    accent: 'text-[#6B7280]',
+    section: 'border-[#F3F4F6]',
   },
 };
 
   const theme = themes[template] || themes.modern;
 
   return (
-    <div ref={ref} id="resume-preview" className="p-8 font-sans text-sm" style={{ minHeight: '297mm' }}>
+    <div ref={ref} id="resume-preview" className="p-8 font-sans text-sm bg-[#ffffff] text-[#111827]" style={{ minHeight: '297mm' }}>
       <div className={`${theme.header} p-6 rounded-t-lg`}>
         <h1 className="text-3xl font-bold">{personal.fullName || 'Your Name'}</h1>
         <p className="text-lg mt-1">{personal.title || 'Professional Title'}</p>
@@ -51,7 +51,7 @@ const themes = {
         {personal.summary && (
           <section className="mb-6">
             <h2 className={`text-lg font-semibold border-b pb-1 mb-2 ${theme.accent}`}>Summary</h2>
-            <p className="text-gray-700">{personal.summary}</p>
+            <p className="text-[#374151]">{personal.summary}</p>
           </section>
         )}
 
@@ -61,13 +61,13 @@ const themes = {
             {experience.map((exp) => (
               <div key={exp.id} className="mb-3">
                 <div className="flex justify-between">
-                  <span className="font-medium">{exp.position || 'Position'}</span>
-                  <span className="text-gray-500 text-xs">
+                  <span className="font-medium text-[#111827]">{exp.position || 'Position'}</span>
+                  <span className="text-[#6B7280] text-xs">
                     {exp.startDate} – {exp.endDate || 'Present'}
                   </span>
                 </div>
-                <p className="text-gray-600 text-sm">{exp.company || 'Company'}</p>
-                {exp.description && <p className="text-gray-700 mt-1">{exp.description}</p>}
+                <p className="text-[#4B5563] text-sm">{exp.company || 'Company'}</p>
+                {exp.description && <p className="text-[#374151] mt-1">{exp.description}</p>}
               </div>
             ))}
           </section>
@@ -77,7 +77,7 @@ const themes = {
           <section className="mb-6">
             <h2 className={`text-lg font-semibold border-b pb-1 mb-2 ${theme.accent}`}>Education</h2>
             {education.map((edu) => (
-              <div key={edu.id} className="mb-2">
+              <div key={edu.id} className="mb-2 text-[#111827]">
                 <span className="font-medium">{edu.school || 'School'}</span> – {edu.degree || 'Degree'} ({edu.graduationYear || 'Year'})
               </div>
             ))}
@@ -89,7 +89,7 @@ const themes = {
             <h2 className={`text-lg font-semibold border-b pb-1 mb-2 ${theme.accent}`}>Skills</h2>
             <div className="flex flex-wrap gap-2">
               {skills.map((skill) => (
-                <span key={skill} className="px-2 py-1 bg-gray-100 rounded-full text-xs">{skill}</span>
+                <span key={skill} className="px-2 py-1 bg-[#F3F4F6] text-[#374151] rounded-full text-xs">{skill}</span>
               ))}
             </div>
           </section>

@@ -125,7 +125,7 @@ export default function CryptoDashboard() {
                     <button
                       onClick={() => toggleFavorite(coin.id)}
                       className={`text-lg transition-colors ${
-                        isFavorite ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
+                        isFavorite ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-400'
                       }`}
                       title={isFavorite ? 'Remove from watchlist' : 'Add to watchlist'}
                     >
