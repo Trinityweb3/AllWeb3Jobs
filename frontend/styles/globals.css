@@ -1,10 +1,8 @@
 @tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer base {
   :root {
-    /* LIGHT THEME (Original) */
+
     --brand-50: #eef2ff;
     --brand-500: #6366f1;
     --brand-700: #4338ca;
@@ -25,7 +23,7 @@
   }
 
   .dark {
-    /* DARK THEME (CoinMarketCap / Binance Style) */
+   
     --brand-50: #1a2332;
     --brand-500: #3861FB;
     --brand-700: #2548cb;
@@ -49,27 +47,26 @@
     @apply font-sans text-gray-900 bg-surface antialiased transition-colors duration-200;
   }
 
-  /* Custom Scrollbar for Dark Theme */
+  
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-surface; /* Matches our dark background */
+    @apply bg-surface; 
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300; /* Visible dark blue/gray */
+    @apply bg-gray-300; 
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400; /* Lighter on hover */
+    @apply bg-gray-400; 
   }
 
-  /* Firefox scrollbar support */
   * {
     scrollbar-width: thin;
     scrollbar-color: theme('colors.gray.300') theme('colors.surface');
