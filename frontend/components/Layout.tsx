@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { siteConfig } from '@/lib/siteConfig';
 import WalletButton from './WalletButton';
+import ThemeToggle from './ThemeToggle';
 interface LayoutProps { children: React.ReactNode; title?: string; description?: string; }
 export default function Layout({ children, title, description }: LayoutProps) {
   const pageTitle = title || siteConfig.defaultTitle;
@@ -14,24 +15,25 @@ export default function Layout({ children, title, description }: LayoutProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <div className="min-h-screen bg-surface">
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-white shadow-sm border-b border-gray-200">
           <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="text-xl font-bold text-gray-900">
             {siteConfig.name}
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-gray-600 hover:text-gray-900">All Jobs</Link>
-            <Link href="/category/internships-juniors" className="text-gray-600 hover:text-gray-900">Internships</Link>
-            <Link href="/category/mid-senior-leads" className="text-gray-600 hover:text-gray-900">Mid & Senior</Link>
+            <Link href="/" className="text-gray-600 hover:text-gray-900 hidden sm:block">All Jobs</Link>
+            <Link href="/category/internships-juniors" className="text-gray-600 hover:text-gray-900 hidden md:block">Internships</Link>
+            <Link href="/category/mid-senior-leads" className="text-gray-600 hover:text-gray-900 hidden md:block">Mid & Senior</Link>
             <Link href="/create-resume" className="text-gray-600 hover:text-gray-900 font-medium">
               Create Resume
             </Link>
+            <ThemeToggle />
             <WalletButton />
           </div>
         </nav>
         </header>
         <main className="max-w-7xl mx-auto px-4 py-8">{children}</main>
-        <footer className="bg-white border-t mt-12 py-6 text-center text-gray-500 text-sm">
+        <footer className="bg-white border-t border-gray-200 mt-12 py-6 text-center text-gray-500 text-sm">
           © {new Date().getFullYear()} {siteConfig.name}
         </footer>
       </div>

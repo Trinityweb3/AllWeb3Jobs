@@ -185,7 +185,7 @@ export default function CreateResumePage() {
                   placeholder={label}
                   value={(resumeData.personal as any)[field]}
                   onChange={(e) => updatePersonal(field, e.target.value)}
-                  className="border rounded-lg px-3 py-2 text-sm"
+                  className="bg-white text-gray-900 border border-gray-200 rounded-lg px-3 py-2 text-sm placeholder-gray-500"
                 />
               ))}
             </div>
@@ -193,7 +193,7 @@ export default function CreateResumePage() {
               placeholder="Professional summary"
               value={resumeData.personal.summary}
               onChange={(e) => updatePersonal('summary', e.target.value)}
-              className="border rounded-lg px-3 py-2 text-sm w-full mt-3 h-24"
+              className="bg-white text-gray-900 border border-gray-200 rounded-lg px-3 py-2 text-sm w-full mt-3 h-24 placeholder-gray-500"
             />
           </section>
 
@@ -217,34 +217,34 @@ export default function CreateResumePage() {
                     placeholder="Company"
                     value={exp.company}
                     onChange={(e) => updateExperience(exp.id, 'company', e.target.value)}
-                    className="border rounded px-2 py-1 text-sm"
+                    className="bg-white text-gray-900 border border-gray-200 rounded px-2 py-1 text-sm placeholder-gray-500"
                   />
                   <input
                     placeholder="Position"
                     value={exp.position}
                     onChange={(e) => updateExperience(exp.id, 'position', e.target.value)}
-                    className="border rounded px-2 py-1 text-sm"
+                    className="bg-white text-gray-900 border border-gray-200 rounded px-2 py-1 text-sm placeholder-gray-500"
                   />
                   <input
                     type="month"
                     placeholder="Start date"
                     value={exp.startDate}
                     onChange={(e) => updateExperience(exp.id, 'startDate', e.target.value)}
-                    className="border rounded px-2 py-1 text-sm"
+                    className="bg-white text-gray-900 border border-gray-200 rounded px-2 py-1 text-sm placeholder-gray-500"
                   />
                   <input
                     type="month"
                     placeholder="End date"
                     value={exp.endDate}
                     onChange={(e) => updateExperience(exp.id, 'endDate', e.target.value)}
-                    className="border rounded px-2 py-1 text-sm"
+                    className="bg-white text-gray-900 border border-gray-200 rounded px-2 py-1 text-sm placeholder-gray-500"
                   />
                 </div>
                 <textarea
                   placeholder="Description"
                   value={exp.description}
                   onChange={(e) => updateExperience(exp.id, 'description', e.target.value)}
-                  className="border rounded px-2 py-1 text-sm w-full mt-2 h-20"
+                  className="bg-white text-gray-900 border border-gray-200 rounded px-2 py-1 text-sm w-full mt-2 h-20 placeholder-gray-500"
                 />
               </div>
             ))}
@@ -270,19 +270,19 @@ export default function CreateResumePage() {
                     placeholder="School"
                     value={edu.school}
                     onChange={(e) => updateEducation(edu.id, 'school', e.target.value)}
-                    className="border rounded px-2 py-1 text-sm"
+                    className="bg-white text-gray-900 border border-gray-200 rounded px-2 py-1 text-sm placeholder-gray-500"
                   />
                   <input
                     placeholder="Degree"
                     value={edu.degree}
                     onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
-                    className="border rounded px-2 py-1 text-sm"
+                    className="bg-white text-gray-900 border border-gray-200 rounded px-2 py-1 text-sm placeholder-gray-500"
                   />
                   <input
                     placeholder="Graduation year"
                     value={edu.graduationYear}
                     onChange={(e) => updateEducation(edu.id, 'graduationYear', e.target.value)}
-                    className="border rounded px-2 py-1 text-sm"
+                    className="bg-white text-gray-900 border border-gray-200 rounded px-2 py-1 text-sm placeholder-gray-500"
                   />
                 </div>
               </div>
@@ -296,7 +296,7 @@ export default function CreateResumePage() {
               placeholder="e.g. Design, Solidity, React"
               value={resumeData.skills.join(', ')}
               onChange={(e) => updateSkills(e.target.value)}
-              className="border rounded-lg px-3 py-2 text-sm w-full"
+              className="bg-white text-gray-900 border border-gray-200 rounded-lg px-3 py-2 text-sm w-full placeholder-gray-500"
             />
           </section>
 
@@ -310,7 +310,7 @@ export default function CreateResumePage() {
 
         <div className="w-full lg:w-1/2 bg-gray-50 p-6 rounded-xl border overflow-y-auto max-h-[90vh]">
           <h2 className="text-lg font-semibold mb-4 text-gray-700">Preview</h2>
-          <div className="bg-white shadow-lg mx-auto" style={{ maxWidth: '210mm' }}>
+          <div className="bg-[#ffffff] text-black shadow-lg mx-auto" style={{ maxWidth: '210mm' }}>
             <ResumePreview ref={previewRef} data={resumeData} />
           </div>
         </div>
